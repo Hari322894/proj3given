@@ -1,30 +1,25 @@
 #include "CSVBusSystem.h"
 #include "StringDataSource.h"
-#include "StringDataSink.h"
+#include "DSVReader.h"
 #include "gtest/gtest.h"
 #include <string>
 #include <vector>
 #include <memory>
 
-// First, let's examine the ReadRow issue
-// The error indicates our mock class's ReadRow method doesn't override the base class method
-// We need to check the actual method signature in CDSVReader
-
-// Let's mock the DSVReader with the correct inheritance
+// Create a mock DSVReader that matches the actual interface
 class MockDSVReader : public CDSVReader {
 private:
     size_t CurrentRow;
     std::vector<std::vector<std::string>> MockData;
     
 public:
-    // Initialize with the base class constructor arguments
+    // Initialize with the correct base class constructor
     MockDSVReader(const std::vector<std::vector<std::string>>& data) 
         : CDSVReader(std::make_shared<CStringDataSource>(""), ','), 
           CurrentRow(0),
           MockData(data) {}
     
-    // The actual ReadRow method in CDSVReader might have a different signature
-    // Let's match whatever the actual one is - removing 'override' for now
+    // Implement ReadRow - no override keyword since we're defining it, not overriding
     bool ReadRow(std::vector<std::string> &row) {
         if (CurrentRow < MockData.size()) {
             row = MockData[CurrentRow];
@@ -34,7 +29,7 @@ public:
         return false;
     }
     
-    // For reuse in tests
+    // Reset for reuse in tests
     void Reset() {
         CurrentRow = 0;
     }
@@ -43,55 +38,117 @@ public:
 // Test fixture for CSVBusSystem
 class CSVBusSystemTest : public ::testing::Test {
 protected:
-    std::vector<std::vector<std::string>> TestBusData = {
-        {"BusID", "Name", "Type", "Latitude", "Longitude"},
-        {"1", "Downtown", "Station", "34.052235", "-118.243683"},
-        {"2", "Uptown", "Station", "34.055862", "-118.249559"},
-        {"3", "Downtown-Uptown", "Bus", "", ""}
+    // Stop data in the format expected by the implementation: stop_id, node_id
+    std::vector<std::vector<std::string>> TestStopData = {
+        {"1", "100"},
+        {"2", "200"}
     };
     
+    // Route data in the format expected by the implementation: route_name, stop_id
     std::vector<std::vector<std::string>> TestRouteData = {
-        {"RouteID", "BusID", "StopNumber"},
-        {"1", "3", "1"},
-        {"1", "1", "2"},
-        {"1", "3", "3"},
-        {"1", "2", "4"}
+        {"Route1", "1"},
+        {"Route1", "2"},
+        {"Route2", "2"},
+        {"Route2", "1"}
     };
 };
 
-// Test loading a bus system
-TEST_F(CSVBusSystemTest, LoadBusSystem) {
+// Test basic stop functionality
+TEST_F(CSVBusSystemTest, StopCountAndAccess) {
     // Create mock readers
-    auto busReader = std::make_shared<MockDSVReader>(TestBusData);
+    auto stopReader = std::make_shared<MockDSVReader>(TestStopData);
     auto routeReader = std::make_shared<MockDSVReader>(TestRouteData);
     
-    // Create bus system - the error shows CCSVBusSystem requires two reader arguments
-    CCSVBusSystem busSystem(busReader, routeReader);
+    // Create bus system
+    CCSVBusSystem busSystem(stopReader, routeReader);
     
-    // From the error, there's no "Load" method, so the data is loaded during construction
+    // Test stop count
+    EXPECT_EQ(busSystem.StopCount(), 2);
     
-    // Test if buses were loaded correctly
-    // There should be methods to access the buses and routes, let's use what's available
+    // Test stop by index
+    auto stop1 = busSystem.StopByIndex(0);
+    ASSERT_NE(stop1, nullptr);
+    EXPECT_EQ(stop1->ID(), 1);
     
-    // Assuming there are accessor methods, we might try:
-    // Test specific bus details - adjust based on actual interface
+    auto stop2 = busSystem.StopByIndex(1);
+    ASSERT_NE(stop2, nullptr);
+    EXPECT_EQ(stop2->ID(), 2);
     
-    // We need to check the actual interface of CCSVBusSystem from CSVBusSystem.h
-    // For now, we're just testing if the object was constructed successfully
-    EXPECT_TRUE(true);
+    // Test stop by ID
+    auto stopById1 = busSystem.StopByID(1);
+    ASSERT_NE(stopById1, nullptr);
+    EXPECT_EQ(stopById1->NodeID(), 100);
     
-    // The rest of the test depends on the actual interface
+    auto stopById2 = busSystem.StopByID(2);
+    ASSERT_NE(stopById2, nullptr);
+    EXPECT_EQ(stopById2->NodeID(), 200);
+    
+    // Test invalid stop index
+    EXPECT_EQ(busSystem.StopByIndex(2), nullptr);
+    
+    // Test invalid stop ID
+    EXPECT_EQ(busSystem.StopByID(3), nullptr);
 }
 
-// We'll follow the same pattern for the route test
-TEST_F(CSVBusSystemTest, FindRoute) {
+// Test route functionality
+TEST_F(CSVBusSystemTest, RouteCountAndAccess) {
     // Create mock readers
-    auto busReader = std::make_shared<MockDSVReader>(TestBusData);
+    auto stopReader = std::make_shared<MockDSVReader>(TestStopData);
     auto routeReader = std::make_shared<MockDSVReader>(TestRouteData);
     
-    // Create bus system with required constructor arguments
-    CCSVBusSystem busSystem(busReader, routeReader);
+    // Create bus system
+    CCSVBusSystem busSystem(stopReader, routeReader);
     
-    // The rest depends on the actual interface
-    EXPECT_TRUE(true);
+    // Test route count
+    EXPECT_EQ(busSystem.RouteCount(), 2);
+    
+    // Test route by index
+    auto route1 = busSystem.RouteByIndex(0);
+    ASSERT_NE(route1, nullptr);
+    EXPECT_EQ(route1->Name(), "Route1");
+    EXPECT_EQ(route1->StopCount(), 2);
+    EXPECT_EQ(route1->GetStopID(0), 1);
+    EXPECT_EQ(route1->GetStopID(1), 2);
+    
+    auto route2 = busSystem.RouteByIndex(1);
+    ASSERT_NE(route2, nullptr);
+    EXPECT_EQ(route2->Name(), "Route2");
+    EXPECT_EQ(route2->StopCount(), 2);
+    EXPECT_EQ(route2->GetStopID(0), 2);
+    EXPECT_EQ(route2->GetStopID(1), 1);
+    
+    // Test route by name
+    auto routeByName1 = busSystem.RouteByName("Route1");
+    ASSERT_NE(routeByName1, nullptr);
+    EXPECT_EQ(routeByName1->StopCount(), 2);
+    
+    auto routeByName2 = busSystem.RouteByName("Route2");
+    ASSERT_NE(routeByName2, nullptr);
+    EXPECT_EQ(routeByName2->StopCount(), 2);
+    
+    // Test invalid route index
+    EXPECT_EQ(busSystem.RouteByIndex(2), nullptr);
+    
+    // Test invalid route name
+    EXPECT_EQ(busSystem.RouteByName("InvalidRoute"), nullptr);
+}
+
+// Test with empty data
+TEST_F(CSVBusSystemTest, EmptyData) {
+    // Create empty mock readers
+    auto emptyStopReader = std::make_shared<MockDSVReader>(std::vector<std::vector<std::string>>());
+    auto emptyRouteReader = std::make_shared<MockDSVReader>(std::vector<std::vector<std::string>>());
+    
+    // Create bus system
+    CCSVBusSystem busSystem(emptyStopReader, emptyRouteReader);
+    
+    // Test counts
+    EXPECT_EQ(busSystem.StopCount(), 0);
+    EXPECT_EQ(busSystem.RouteCount(), 0);
+    
+    // Test access
+    EXPECT_EQ(busSystem.StopByIndex(0), nullptr);
+    EXPECT_EQ(busSystem.StopByID(1), nullptr);
+    EXPECT_EQ(busSystem.RouteByIndex(0), nullptr);
+    EXPECT_EQ(busSystem.RouteByName("Route1"), nullptr);
 }
