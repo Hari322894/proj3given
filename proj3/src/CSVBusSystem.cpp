@@ -8,14 +8,14 @@
 class CCSVBusSystem::SStop : public CBusSystem::SStop {
 public:
     TStopID StopID;
-    CStreetMap::TNodeID NodeID;
+    CStreetMap::TNodeID NodeIDValue;
 
     TStopID ID() const noexcept override {
         return StopID;
     }
 
     CStreetMap::TNodeID NodeID() const noexcept override {
-        return NodeID;
+        return NodeIDValue;
     }
 };
 
@@ -53,7 +53,7 @@ CCSVBusSystem::CCSVBusSystem(std::shared_ptr<CDSVReader> stopsrc, std::shared_pt
     while (stopsrc->ReadRow(row)) {
         auto stop = std::make_shared<SStop>();
         stop->StopID = std::stoul(row[0]); // Assuming stop_id is the first column
-        stop->NodeID = std::stoul(row[1]); // Assuming node_id is the second column
+        stop->NodeIDValue = std::stoul(row[1]); // Assuming node_id is the second column
         DImplementation->Stops[stop->StopID] = stop;
     }
 
