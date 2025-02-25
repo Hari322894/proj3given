@@ -19,6 +19,9 @@ public:
     std::shared_ptr<CBusSystem::SRoute> RouteByIndex(std::size_t index) const noexcept override;
     std::shared_ptr<CBusSystem::SRoute> RouteByName(const std::string &name) const noexcept override;
 
+    // Debug function to print loaded data
+    void PrintDebugInfo() const;
+
 private:
     struct SStop;
     struct SRoute;
