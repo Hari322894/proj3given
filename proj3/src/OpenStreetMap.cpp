@@ -5,7 +5,7 @@
 #include <string>
 #include <unordered_map>
 
-// Create concrete implementations of the abstract SNode and SWay
+// Concrete implementation of SNode
 class COpenStreetMap::SImplementation::SNodeImpl : public CStreetMap::SNode {
 public:
     TNodeID NodeID;
@@ -46,6 +46,7 @@ public:
     }
 };
 
+// Concrete implementation of SWay
 class COpenStreetMap::SImplementation::SWayImpl : public CStreetMap::SWay {
 public:
     TWayID WayID;
@@ -94,64 +95,110 @@ public:
 };
 
 struct COpenStreetMap::SImplementation {
-    std::vector<std::shared_ptr<SNodeImpl>> Nodes;
-    std::vector<std::shared_ptr<SWayImpl>> Ways;
-    
-    // Define nested classes here
+    // Forward declarations of our implementation classes
     class SNodeImpl;
     class SWayImpl;
+
+    std::vector<std::shared_ptr<SNodeImpl>> Nodes;
+    std::vector<std::shared_ptr<SWayImpl>> Ways;
 };
 
 COpenStreetMap::COpenStreetMap(std::shared_ptr<CXMLReader> src) {
     DImplementation = std::make_unique<SImplementation>();
     
-    // Parse XML and load nodes and ways
-    // You'll need to adjust this based on your actual CXMLReader interface
-    while (src->ReadNode()) {
-        if (src->GetNodeType() == "node") {
-            auto node = std::make_shared<SImplementation::SNodeImpl>();
-            
-            // Parse node attributes from XML
-            node->NodeID = std::stoull(src->GetAttribute("id"));
-            
-            // Parse latitude and longitude
-            double lat = std::stod(src->GetAttribute("lat"));
-            double lon = std::stod(src->GetAttribute("lon"));
-            node->NodeLocation = CStreetMap::TLocation(lat, lon);
-            
-            // Read all attributes
-            for (size_t i = 0; i < src->GetAttributeCount(); ++i) {
-                std::string key = src->GetAttributeKey(i);
-                if (key != "id" && key != "lat" && key != "lon") {
-                    node->Attributes[key] = src->GetAttribute(key);
+    SXMLEntity entity;
+    std::shared_ptr<SImplementation::SNodeImpl> currentNode = nullptr;
+    std::shared_ptr<SImplementation::SWayImpl> currentWay = nullptr;
+    
+    // Parse the XML file
+    while (src->ReadEntity(entity)) {
+        if (entity.DType == SXMLEntity::EType::StartElement) {
+            if (entity.DNameData == "node") {
+                // Create a new node
+                currentNode = std::make_shared<SImplementation::SNodeImpl>();
+                currentWay = nullptr;
+                
+                // Process node attributes
+                for (const auto& attr : entity.DAttributes) {
+                    if (attr.first == "id") {
+                        currentNode->NodeID = std::stoull(attr.second);
+                    } 
+                    else if (attr.first == "lat") {
+                        double lat = std::stod(attr.second);
+                        if (currentNode->NodeLocation.first == 0.0) { // Initialize with lat first
+                            currentNode->NodeLocation.first = lat;
+                        }
+                    } 
+                    else if (attr.first == "lon") {
+                        double lon = std::stod(attr.second);
+                        if (currentNode->NodeLocation.second == 0.0) { // Then lon
+                            currentNode->NodeLocation.second = lon;
+                        }
+                    } 
+                    else {
+                        // Store other attributes
+                        currentNode->Attributes[attr.first] = attr.second;
+                    }
+                }
+            } 
+            else if (entity.DNameData == "way") {
+                // Create a new way
+                currentWay = std::make_shared<SImplementation::SWayImpl>();
+                currentNode = nullptr;
+                
+                // Process way attributes
+                for (const auto& attr : entity.DAttributes) {
+                    if (attr.first == "id") {
+                        currentWay->WayID = std::stoull(attr.second);
+                    } 
+                    else {
+                        // Store other attributes
+                        currentWay->Attributes[attr.first] = attr.second;
+                    }
+                }
+            } 
+            else if (entity.DNameData == "nd" && currentWay) {
+                // Process node reference inside a way
+                for (const auto& attr : entity.DAttributes) {
+                    if (attr.first == "ref") {
+                        TNodeID nodeID = std::stoull(attr.second);
+                        currentWay->NodeIDs.push_back(nodeID);
+                    }
+                }
+            } 
+            else if (entity.DNameData == "tag") {
+                // Process tag element for both nodes and ways
+                std::string key, value;
+                for (const auto& attr : entity.DAttributes) {
+                    if (attr.first == "k") {
+                        key = attr.second;
+                    } 
+                    else if (attr.first == "v") {
+                        value = attr.second;
+                    }
+                }
+                
+                if (!key.empty()) {
+                    if (currentNode) {
+                        currentNode->Attributes[key] = value;
+                    } 
+                    else if (currentWay) {
+                        currentWay->Attributes[key] = value;
+                    }
                 }
             }
-            
-            DImplementation->Nodes.push_back(node);
         } 
-        else if (src->GetNodeType() == "way") {
-            auto way = std::make_shared<SImplementation::SWayImpl>();
-            
-            // Parse way ID
-            way->WayID = std::stoull(src->GetAttribute("id"));
-            
-            // Read all attributes
-            for (size_t i = 0; i < src->GetAttributeCount(); ++i) {
-                std::string key = src->GetAttributeKey(i);
-                if (key != "id") {
-                    way->Attributes[key] = src->GetAttribute(key);
-                }
+        else if (entity.DType == SXMLEntity::EType::EndElement) {
+            if (entity.DNameData == "node" && currentNode) {
+                // Finish processing a node
+                DImplementation->Nodes.push_back(currentNode);
+                currentNode = nullptr;
+            } 
+            else if (entity.DNameData == "way" && currentWay) {
+                // Finish processing a way
+                DImplementation->Ways.push_back(currentWay);
+                currentWay = nullptr;
             }
-            
-            // Parse node references (will need to be adapted based on XML structure)
-            while (src->ReadNode() && src->GetNodeType() != "way") {
-                if (src->GetNodeType() == "nd") {
-                    TNodeID refID = std::stoull(src->GetAttribute("ref"));
-                    way->NodeIDs.push_back(refID);
-                }
-            }
-            
-            DImplementation->Ways.push_back(way);
         }
     }
 }
