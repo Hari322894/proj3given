@@ -8,7 +8,6 @@ SRC_DIR = src
 TEST_DIR = testsrc
 OBJ_DIR = obj
 BIN_DIR = bin
-INCLUDE_DIR = include
 
 # Source files
 SRC_FILES = $(wildcard $(SRC_DIR)/*.cpp)
