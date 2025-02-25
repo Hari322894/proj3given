@@ -4,6 +4,7 @@
 #include <vector>
 #include <string>
 #include <unordered_map>
+#include <iostream> // For debugging output
 
 class CCSVBusSystem::SStop : public CBusSystem::SStop {
 public:
@@ -51,14 +52,24 @@ CCSVBusSystem::CCSVBusSystem(std::shared_ptr<CDSVReader> stopsrc, std::shared_pt
     // Load stops
     std::vector<std::string> row;
     while (stopsrc->ReadRow(row)) {
+        if (row.empty()) {
+            std::cerr << "Warning: Empty row encountered in stops CSV." << std::endl;
+            continue;
+        }
         auto stop = std::make_shared<SStop>();
         stop->StopID = std::stoul(row[0]); // Assuming stop_id is the first column
         stop->NodeIDValue = std::stoul(row[1]); // Assuming node_id is the second column
         DImplementation->Stops[stop->StopID] = stop;
+        std::cerr << "Loaded Stop: ID=" << stop->StopID << " NodeID=" << stop->NodeIDValue << std::endl;
+        row.clear();
     }
 
     // Load routes
     while (routesrc->ReadRow(row)) {
+        if (row.empty()) {
+            std::cerr << "Warning: Empty row encountered in routes CSV." << std::endl;
+            continue;
+        }
         std::string routeName = row[0]; // Assuming route is the first column
         if (DImplementation->Routes.find(routeName) == DImplementation->Routes.end()) {
             DImplementation->Routes[routeName] = std::make_shared<SRoute>();
@@ -66,6 +77,8 @@ CCSVBusSystem::CCSVBusSystem(std::shared_ptr<CDSVReader> stopsrc, std::shared_pt
         }
         TStopID stopID = std::stoul(row[1]); // Assuming stop_id is the second column
         DImplementation->Routes[routeName]->RouteStops.push_back(stopID);
+        std::cerr << "Loaded Route: " << routeName << " StopID=" << stopID << std::endl;
+        row.clear();
     }
 }
 
