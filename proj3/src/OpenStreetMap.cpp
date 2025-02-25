@@ -3,7 +3,6 @@
 #include <memory>
 #include <vector>
 #include <string>
-#include <iostream>
 
 struct COpenStreetMap::SImplementation {
     std::vector<std::shared_ptr<SNode>> Nodes;

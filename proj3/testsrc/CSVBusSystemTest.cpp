@@ -5,6 +5,23 @@
 #include <vector>
 #include <string>
 
+class MockDSVReader : public CDSVReader {
+public:
+    std::vector<std::vector<std::string>> Data;
+    size_t CurrentRow;
+
+    MockDSVReader() : CurrentRow(0) {}
+
+    bool ReadRow(std::vector<std::string> &row) override {
+        if (CurrentRow < Data.size()) {
+            row = Data[CurrentRow];
+            CurrentRow++;
+            return true;
+        }
+        return false;
+    }
+};
+
 class CSVBusSystemTest : public ::testing::Test {
 protected:
     void SetUp() override {
@@ -17,15 +34,23 @@ protected:
 };
 
 TEST_F(CSVBusSystemTest, TestStopCount) {
-    auto stopReader = std::make_shared<CDSVReader>("stops.csv");
-    auto routeReader = std::make_shared<CDSVReader>("routes.csv");
+    auto stopReader = std::make_shared<MockDSVReader>();
+    stopReader->Data = { {"1", "100"}, {"2", "200"}, {"3", "300"} };
+
+    auto routeReader = std::make_shared<MockDSVReader>();
+    routeReader->Data = { {"Route1", "1"}, {"Route1", "2"}, {"Route2", "3"} };
+
     CCSVBusSystem busSystem(stopReader, routeReader);
-    EXPECT_EQ(busSystem.StopCount(), 5); // Example expected count
+    EXPECT_EQ(busSystem.StopCount(), 3);
 }
 
 TEST_F(CSVBusSystemTest, TestRouteCount) {
-    auto stopReader = std::make_shared<CDSVReader>("stops.csv");
-    auto routeReader = std::make_shared<CDSVReader>("routes.csv");
+    auto stopReader = std::make_shared<MockDSVReader>();
+    stopReader->Data = { {"1", "100"}, {"2", "200"}, {"3", "300"} };
+
+    auto routeReader = std::make_shared<MockDSVReader>();
+    routeReader->Data = { {"Route1", "1"}, {"Route1", "2"}, {"Route2", "3"} };
+
     CCSVBusSystem busSystem(stopReader, routeReader);
-    EXPECT_EQ(busSystem.RouteCount(), 3); // Example expected count
+    EXPECT_EQ(busSystem.RouteCount(), 2);
 }
