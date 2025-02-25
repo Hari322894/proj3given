@@ -8,7 +8,6 @@ SRC_DIR = src
 TEST_DIR = testsrc
 OBJ_DIR = obj
 BIN_DIR = bin
-INCLUDE_DIR = include
 
 # Source files
 SRC_FILES = $(wildcard $(SRC_DIR)/*.cpp)
@@ -18,14 +17,14 @@ TEST_FILES = $(wildcard $(TEST_DIR)/*.cpp)
 OBJ_FILES = $(patsubst $(SRC_DIR)/%.cpp,$(OBJ_DIR)/%.o,$(SRC_FILES))
 TEST_OBJ_FILES = $(patsubst $(TEST_DIR)/%.cpp,$(OBJ_DIR)/%.o,$(TEST_FILES))
 
-# Output binaries
-GTEST_TARGETS = $(BIN_DIR)/testcsvbussystem $(BIN_DIR)/testopenstreetmap
+# Output binary
+GTEST_TARGET = $(BIN_DIR)/runtests
 
 # Default target
-all: $(GTEST_TARGETS)
+all: $(GTEST_TARGET)
 
-# Rule to build the Google Test binaries
-$(BIN_DIR)/%: $(OBJ_FILES) $(OBJ_DIR)/%Test.o
+# Rule to build the Google Test binary
+$(GTEST_TARGET): $(OBJ_FILES) $(TEST_OBJ_FILES)
 	@mkdir -p $(BIN_DIR)
 	$(CXX) $(CXXFLAGS) $^ -o $@ $(LDFLAGS)
 
@@ -33,7 +32,7 @@ $(BIN_DIR)/%: $(OBJ_FILES) $(OBJ_DIR)/%Test.o
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp | $(OBJ_DIR)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
-$(OBJ_DIR)/%Test.o: $(TEST_DIR)/%Test.cpp | $(OBJ_DIR)
+$(OBJ_DIR)/%.o: $(TEST_DIR)/%.cpp | $(OBJ_DIR)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 # Ensure the object directory exists
@@ -46,7 +45,7 @@ clean:
 
 # Run tests
 test: all
-	$(foreach target,$(GTEST_TARGETS),./$(target);)
+	./$(GTEST_TARGET)
 
 # Phony targets
 .PHONY: all clean test
