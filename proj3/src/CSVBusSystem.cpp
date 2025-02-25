@@ -21,7 +21,8 @@ public:
         return NodeIDValue;
     }
     
-    bool ISSA() const noexcept override {
+    // Removed 'override' since it's not in the base class
+    bool ISSA() const noexcept {
         return ISSAValue;
     }
 };
@@ -52,31 +53,6 @@ struct CCSVBusSystem::SImplementation {
     std::unordered_map<TStopID, std::shared_ptr<SStop>> Stops;
     std::vector<std::shared_ptr<SRoute>> RoutesByIndex;
     std::unordered_map<std::string, std::shared_ptr<SRoute>> Routes;
-    
-    void PrintSystemData(std::ostream& os) const {
-        os << "StopCount: " << StopsByIndex.size() << std::endl;
-        os << "RouteCount: " << RoutesByIndex.size() << std::endl;
-        
-        // Print stop information
-        for (size_t i = 0; i < StopsByIndex.size(); ++i) {
-            auto stop = StopsByIndex[i];
-            os << "Index " << i << " ID: " << stop->StopID 
-               << " NodeID: " << stop->NodeIDValue 
-               << " ISSA: " << (stop->ISSAValue ? "Yes" : "No") << std::endl;
-        }
-        
-        // Print route information
-        for (size_t i = 0; i < RoutesByIndex.size(); ++i) {
-            auto route = RoutesByIndex[i];
-            os << "Route Index " << i << " Name: " << route->RouteName 
-               << " StopCount: " << route->RouteStops.size() << std::endl;
-            
-            // Print stops in route
-            for (size_t j = 0; j < route->RouteStops.size(); ++j) {
-                os << "RouteStop " << i << "," << j << ": " << route->RouteStops[j] << std::endl;
-            }
-        }
-    }
 };
 
 CCSVBusSystem::CCSVBusSystem(std::shared_ptr<CDSVReader> stopsrc, std::shared_ptr<CDSVReader> routesrc) {
@@ -165,7 +141,34 @@ std::shared_ptr<CBusSystem::SRoute> CCSVBusSystem::RouteByName(const std::string
     return (it != DImplementation->Routes.end()) ? it->second : nullptr;
 }
 
+// Move this functionality inside the CCSVBusSystem class to access private members
 std::ostream &operator<<(std::ostream &os, const CCSVBusSystem &bussystem) {
-    bussystem.DImplementation->PrintSystemData(os);
+    os << "StopCount: " << bussystem.StopCount() << std::endl;
+    os << "RouteCount: " << bussystem.RouteCount() << std::endl;
+    
+    // Print stop information
+    for (size_t i = 0; i < bussystem.StopCount(); ++i) {
+        auto stop = std::dynamic_pointer_cast<CCSVBusSystem::SStop>(bussystem.StopByIndex(i));
+        if (stop) {
+            os << "Index " << i << " ID: " << stop->ID() 
+               << " NodeID: " << stop->NodeID() 
+               << " ISSA: " << (stop->ISSA() ? "Yes" : "No") << std::endl;
+        }
+    }
+    
+    // Print route information
+    for (size_t i = 0; i < bussystem.RouteCount(); ++i) {
+        auto route = std::dynamic_pointer_cast<CCSVBusSystem::SRoute>(bussystem.RouteByIndex(i));
+        if (route) {
+            os << "Route Index " << i << " Name: " << route->Name() 
+               << " StopCount: " << route->StopCount() << std::endl;
+            
+            // Print stops in route
+            for (size_t j = 0; j < route->StopCount(); ++j) {
+                os << "RouteStop " << i << "," << j << ": " << route->GetStopID(j) << std::endl;
+            }
+        }
+    }
+    
     return os;
 }
