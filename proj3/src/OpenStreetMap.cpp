@@ -1,106 +1,125 @@
-#include "OpenStreetMap.h"
-#include "XMLReader.h"
-#include <memory>
-#include <vector>
-#include <string>
-#include <unordered_map>
+#include "OpenStreetMap.h" // header file for COpenStreetMap class
+#include "XMLReader.h" // geader file for XML parsing functionality
+#include <memory> // for smart pointers like std::shared_ptr and std::unique_ptr
+#include <vector>// for storing nodes and ways in dynamic arrays
+#include <string>// for handling string attributes 
+#include <unordered_map> //for storing and searching attributes
 
-// Define implementation structure first
+
+// defining simplementation structure first using COpenStreetMap
 struct COpenStreetMap::SImplementation {
     // Forward declarations of implementation classes
     class SNodeImpl;
     class SWayImpl;
-
+   //storing ways and nodes here
     std::vector<std::shared_ptr<SNodeImpl>> Nodes;
     std::vector<std::shared_ptr<SWayImpl>> Ways;
 };
 
-// Now define the implementation classes
+// now we define the implementation classes using CStreetMap::SNode
 class COpenStreetMap::SImplementation::SNodeImpl : public CStreetMap::SNode {
 public:
+ // ID of the node
     TNodeID NodeID;
+//coordinates of the node or the loaction
     TLocation NodeLocation;
+//key and value attributes using an unordered map
     std::unordered_map<std::string, std::string> Attributes;
-
+//getting nodes ID
     TNodeID ID() const noexcept override {
         return NodeID;
     }
-
+//getting nodes location
     TLocation Location() const noexcept override {
         return NodeLocation;
     }
-
+// # of attributes node has
     std::size_t AttributeCount() const noexcept override {
         return Attributes.size();
     }
-
+//retrieving key of attribute through index
     std::string GetAttributeKey(std::size_t index) const noexcept override {
         if (index < Attributes.size()) {
-            auto it = Attributes.begin();
-            std::advance(it, index);
-            return it->first;
+            auto t = Attributes.begin();
+// iterate to the required position 
+            for (std::size_t i = 0; i < index; i++) {
+                ++t; 
+            }
+// return the key at the index it's at
+            return t->first; 
         }
-        return "";
+// return empty string if index is out of bounds
+        return ""; 
     }
-
+// checking to see if the node has a attribute using key
     bool HasAttribute(const std::string &key) const noexcept override {
         return Attributes.find(key) != Attributes.end();
     }
-
+   // Retrieve the value of  attribute if the node has an attribute
     std::string GetAttribute(const std::string &key) const noexcept override {
-        auto it = Attributes.find(key);
-        if (it != Attributes.end()) {
-            return it->second;
+        auto t = Attributes.find(key);
+        if (t != Attributes.end()) {
+            return t->second;
         }
+    //if out of bounds return ""
         return "";
     }
 };
-
+// way class, when using CStreetMap::SWay
 class COpenStreetMap::SImplementation::SWayImpl : public CStreetMap::SWay {
 public:
+//ID of way
     TWayID WayID;
+//Nodes IDS
     std::vector<TNodeID> NodeIDs;
+//attributes for key and value using unordered map
     std::unordered_map<std::string, std::string> Attributes;
-
+//Getting the way's ID
     TWayID ID() const noexcept override {
         return WayID;
     }
-
+//# of nodes in way
     std::size_t NodeCount() const noexcept override {
         return NodeIDs.size();
     }
-
+//Getting Node ID through index
     TNodeID GetNodeID(std::size_t index) const noexcept override {
         if (index < NodeIDs.size()) {
             return NodeIDs[index];
         }
         return CStreetMap::InvalidNodeID;
     }
-
+//# of attributes ways has
     std::size_t AttributeCount() const noexcept override {
         return Attributes.size();
     }
-
-    std::string GetAttributeKey(std::size_t index) const noexcept override {
-        if (index < Attributes.size()) {
-            auto it = Attributes.begin();
-            std::advance(it, index);
-            return it->first;
+//retrieving key of attribute through index
+std::string GetAttributeKey(std::size_t index) const noexcept override {
+    if (index < Attributes.size()) {
+        auto t = Attributes.begin();
+// iterate to the required position 
+        for (std::size_t i = 0; i < index; i++) {
+            ++t; 
         }
-        return "";
+// return the key at the index it's at
+        return t->first; 
     }
-
-    bool HasAttribute(const std::string &key) const noexcept override {
-        return Attributes.find(key) != Attributes.end();
+// return empty string if index is out of bounds
+    return ""; 
+}
+// checking to see if the node has a attribute using key
+bool HasAttribute(const std::string &key) const noexcept override {
+    return Attributes.find(key) != Attributes.end();
+}
+// Retrieve the value of  attribute if the node has an attribute
+std::string GetAttribute(const std::string &key) const noexcept override {
+    auto t = Attributes.find(key);
+    if (t != Attributes.end()) {
+        return t->second;
     }
-
-    std::string GetAttribute(const std::string &key) const noexcept override {
-        auto it = Attributes.find(key);
-        if (it != Attributes.end()) {
-            return it->second;
-        }
-        return "";
-    }
+//if out of bounds return ""
+    return "";
+}
 };
 
 COpenStreetMap::COpenStreetMap(std::shared_ptr<CXMLReader> src) {
@@ -233,7 +252,7 @@ std::shared_ptr<CStreetMap::SNode> COpenStreetMap::NodeByID(TNodeID id) const no
 
 std::shared_ptr<CStreetMap::SWay> COpenStreetMap::WayByIndex(std::size_t index) const noexcept {
     if (index < DImplementation->Ways.size()) {
-        // Return the implementation as its base class
+        // return the implementation as its base class
         return std::static_pointer_cast<CStreetMap::SWay>(DImplementation->Ways[index]);
     }
     return nullptr;
@@ -242,7 +261,7 @@ std::shared_ptr<CStreetMap::SWay> COpenStreetMap::WayByIndex(std::size_t index) 
 std::shared_ptr<CStreetMap::SWay> COpenStreetMap::WayByID(TWayID id) const noexcept {
     for (auto& way : DImplementation->Ways) {
         if (way->ID() == id) {
-            // Return the implementation as its base class
+            // return the implementation as its base class
             return std::static_pointer_cast<CStreetMap::SWay>(way);
         }
     }
