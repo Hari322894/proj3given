@@ -5,7 +5,17 @@
 #include <string>
 #include <unordered_map>
 
-// Concrete implementation of SNode
+// Define implementation structure first
+struct COpenStreetMap::SImplementation {
+    // Forward declarations of implementation classes
+    class SNodeImpl;
+    class SWayImpl;
+
+    std::vector<std::shared_ptr<SNodeImpl>> Nodes;
+    std::vector<std::shared_ptr<SWayImpl>> Ways;
+};
+
+// Now define the implementation classes
 class COpenStreetMap::SImplementation::SNodeImpl : public CStreetMap::SNode {
 public:
     TNodeID NodeID;
@@ -46,7 +56,6 @@ public:
     }
 };
 
-// Concrete implementation of SWay
 class COpenStreetMap::SImplementation::SWayImpl : public CStreetMap::SWay {
 public:
     TWayID WayID;
@@ -92,15 +101,6 @@ public:
         }
         return "";
     }
-};
-
-struct COpenStreetMap::SImplementation {
-    // Forward declarations of our implementation classes
-    class SNodeImpl;
-    class SWayImpl;
-
-    std::vector<std::shared_ptr<SNodeImpl>> Nodes;
-    std::vector<std::shared_ptr<SWayImpl>> Ways;
 };
 
 COpenStreetMap::COpenStreetMap(std::shared_ptr<CXMLReader> src) {
@@ -215,7 +215,8 @@ std::size_t COpenStreetMap::WayCount() const noexcept {
 
 std::shared_ptr<CStreetMap::SNode> COpenStreetMap::NodeByIndex(std::size_t index) const noexcept {
     if (index < DImplementation->Nodes.size()) {
-        return DImplementation->Nodes[index];
+        // Return the implementation as its base class
+        return std::static_pointer_cast<CStreetMap::SNode>(DImplementation->Nodes[index]);
     }
     return nullptr;
 }
@@ -223,7 +224,8 @@ std::shared_ptr<CStreetMap::SNode> COpenStreetMap::NodeByIndex(std::size_t index
 std::shared_ptr<CStreetMap::SNode> COpenStreetMap::NodeByID(TNodeID id) const noexcept {
     for (auto& node : DImplementation->Nodes) {
         if (node->ID() == id) {
-            return node;
+            // Return the implementation as its base class
+            return std::static_pointer_cast<CStreetMap::SNode>(node);
         }
     }
     return nullptr;
@@ -231,7 +233,8 @@ std::shared_ptr<CStreetMap::SNode> COpenStreetMap::NodeByID(TNodeID id) const no
 
 std::shared_ptr<CStreetMap::SWay> COpenStreetMap::WayByIndex(std::size_t index) const noexcept {
     if (index < DImplementation->Ways.size()) {
-        return DImplementation->Ways[index];
+        // Return the implementation as its base class
+        return std::static_pointer_cast<CStreetMap::SWay>(DImplementation->Ways[index]);
     }
     return nullptr;
 }
@@ -239,7 +242,8 @@ std::shared_ptr<CStreetMap::SWay> COpenStreetMap::WayByIndex(std::size_t index) 
 std::shared_ptr<CStreetMap::SWay> COpenStreetMap::WayByID(TWayID id) const noexcept {
     for (auto& way : DImplementation->Ways) {
         if (way->ID() == id) {
-            return way;
+            // Return the implementation as its base class
+            return std::static_pointer_cast<CStreetMap::SWay>(way);
         }
     }
     return nullptr;
