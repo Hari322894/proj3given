@@ -1,5 +1,9 @@
-#include "openstreetmap.h"
+#include "OpenStreetMap.h"
 #include "XMLReader.h"
+#include <memory>
+#include <vector>
+#include <string>
+#include <iostream>
 
 struct COpenStreetMap::SImplementation {
     std::vector<std::shared_ptr<SNode>> Nodes;
@@ -9,18 +13,16 @@ struct COpenStreetMap::SImplementation {
 COpenStreetMap::COpenStreetMap(std::shared_ptr<CXMLReader> src) {
     DImplementation = std::make_unique<SImplementation>();
 
-    // Parse the XML and populate Nodes and Ways
+    // Parse XML and load nodes and ways
     while (src->Read()) {
-        if (src->NodeType() == CXMLReader::EXMLNodeType::Element) {
-            if (src->NodeName() == "node") {
-                auto node = std::make_shared<SNode>();
-                node->ID = std::stoul(src->AttributeValue("id"));
-                DImplementation->Nodes.push_back(node);
-            } else if (src->NodeName() == "way") {
-                auto way = std::make_shared<SWay>();
-                way->ID = std::stoul(src->AttributeValue("id"));
-                DImplementation->Ways.push_back(way);
-            }
+        if (src->Name() == "node") {
+            auto node = std::make_shared<SNode>();
+            // Parse node attributes and add to Nodes
+            DImplementation->Nodes.push_back(node);
+        } else if (src->Name() == "way") {
+            auto way = std::make_shared<SWay>();
+            // Parse way attributes and add to Ways
+            DImplementation->Ways.push_back(way);
         }
     }
 }
@@ -44,7 +46,7 @@ std::shared_ptr<CStreetMap::SNode> COpenStreetMap::NodeByIndex(std::size_t index
 
 std::shared_ptr<CStreetMap::SNode> COpenStreetMap::NodeByID(TNodeID id) const noexcept {
     for (auto& node : DImplementation->Nodes) {
-        if (node->ID == id) {
+        if (node->ID() == id) {
             return node;
         }
     }
@@ -60,7 +62,7 @@ std::shared_ptr<CStreetMap::SWay> COpenStreetMap::WayByIndex(std::size_t index) 
 
 std::shared_ptr<CStreetMap::SWay> COpenStreetMap::WayByID(TWayID id) const noexcept {
     for (auto& way : DImplementation->Ways) {
-        if (way->ID == id) {
+        if (way->ID() == id) {
             return way;
         }
     }

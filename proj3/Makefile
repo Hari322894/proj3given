@@ -8,6 +8,7 @@ SRC_DIR = src
 TEST_DIR = testsrc
 OBJ_DIR = obj
 BIN_DIR = bin
+INCLUDE_DIR = include
 
 # Source files
 SRC_FILES = $(wildcard $(SRC_DIR)/*.cpp)
@@ -17,14 +18,17 @@ TEST_FILES = $(wildcard $(TEST_DIR)/*.cpp)
 OBJ_FILES = $(patsubst $(SRC_DIR)/%.cpp,$(OBJ_DIR)/%.o,$(SRC_FILES))
 TEST_OBJ_FILES = $(patsubst $(TEST_DIR)/%.cpp,$(OBJ_DIR)/%.o,$(TEST_FILES))
 
-# Output binary
-GTEST_TARGET = $(BIN_DIR)/runtests
+# Output binaries
+GTEST_TARGETS = $(BIN_DIR)/teststrutils $(BIN_DIR)/teststrdatasource \
+                $(BIN_DIR)/teststrdatasink $(BIN_DIR)/testdsv \
+                $(BIN_DIR)/testxml $(BIN_DIR)/testcsvbs \
+                $(BIN_DIR)/testosm
 
 # Default target
-all: $(GTEST_TARGET)
+all: $(GTEST_TARGETS)
 
-# Rule to build the Google Test binary
-$(GTEST_TARGET): $(OBJ_FILES) $(TEST_OBJ_FILES)
+# Rule to build the Google Test binaries
+$(BIN_DIR)/%: $(OBJ_FILES) $(OBJ_DIR)/%Test.o
 	@mkdir -p $(BIN_DIR)
 	$(CXX) $(CXXFLAGS) $^ -o $@ $(LDFLAGS)
 
@@ -32,7 +36,7 @@ $(GTEST_TARGET): $(OBJ_FILES) $(TEST_OBJ_FILES)
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp | $(OBJ_DIR)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
-$(OBJ_DIR)/%.o: $(TEST_DIR)/%.cpp | $(OBJ_DIR)
+$(OBJ_DIR)/%Test.o: $(TEST_DIR)/%Test.cpp | $(OBJ_DIR)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 # Ensure the object directory exists
@@ -45,7 +49,7 @@ clean:
 
 # Run tests
 test: all
-	./$(GTEST_TARGET)
+	$(foreach target,$(GTEST_TARGETS),./$(target);)
 
 # Phony targets
 .PHONY: all clean test

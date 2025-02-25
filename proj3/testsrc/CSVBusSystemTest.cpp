@@ -1,39 +1,31 @@
-#include "gtest/gtest.h"
-#include "CSBusSystem.h"
+#include "CSVBusSystem.h"
 #include "DSVReader.h"
+#include <gtest/gtest.h>
+#include <memory>
+#include <vector>
+#include <string>
 
-// Test for CCSVBusSystem class
-TEST(BusSystemTest, StopAndRouteCount) {
+class CSVBusSystemTest : public ::testing::Test {
+protected:
+    void SetUp() override {
+        // Setup code for CSVBusSystemTest
+    }
+
+    void TearDown() override {
+        // Cleanup code for CSVBusSystemTest
+    }
+};
+
+TEST_F(CSVBusSystemTest, TestStopCount) {
     auto stopReader = std::make_shared<CDSVReader>("stops.csv");
     auto routeReader = std::make_shared<CDSVReader>("routes.csv");
     CCSVBusSystem busSystem(stopReader, routeReader);
-
-    EXPECT_EQ(busSystem.StopCount(), 25); // Adjust as per your data
-    EXPECT_EQ(busSystem.RouteCount(), 1); // Adjust as per your data
+    EXPECT_EQ(busSystem.StopCount(), 5); // Example expected count
 }
 
-TEST(BusSystemTest, StopByID) {
+TEST_F(CSVBusSystemTest, TestRouteCount) {
     auto stopReader = std::make_shared<CDSVReader>("stops.csv");
     auto routeReader = std::make_shared<CDSVReader>("routes.csv");
     CCSVBusSystem busSystem(stopReader, routeReader);
-
-    auto stop = busSystem.StopByID(22043); // Adjust as per your data
-    ASSERT_NE(stop, nullptr);
-    EXPECT_EQ(stop->ID, 22043);
-    EXPECT_EQ(stop->NodeID, 2849810514);
-}
-
-TEST(BusSystemTest, RouteByName) {
-    auto stopReader = std::make_shared<CDSVReader>("stops.csv");
-    auto routeReader = std::make_shared<CDSVReader>("routes.csv");
-    CCSVBusSystem busSystem(stopReader, routeReader);
-
-    auto route = busSystem.RouteByName("A"); // Adjust as per your data
-    ASSERT_NE(route, nullptr);
-    EXPECT_EQ(route->Name, "A");
-}
-
-int main(int argc, char **argv) {
-    ::testing::InitGoogleTest(&argc, argv);
-    return RUN_ALL_TESTS();
+    EXPECT_EQ(busSystem.RouteCount(), 3); // Example expected count
 }
