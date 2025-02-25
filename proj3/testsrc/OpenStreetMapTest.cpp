@@ -7,27 +7,25 @@
 
 class MockXMLReader : public CXMLReader {
 public:
-    std::vector<std::string> Data;
+    struct SXMLEntity {
+        enum class EType { StartElement, EndElement };
+        EType DType;
+        std::string DNameData;
+        std::unordered_map<std::string, std::string> DAttributes;
+    };
+
+    std::vector<SXMLEntity> Data;
     size_t CurrentIndex;
 
     // Fix: Call CXMLReader's constructor explicitly
     MockXMLReader() : CXMLReader(nullptr), CurrentIndex(0) {}
 
-    // Fix: Ensure Read() method properly overrides the base class method
-    bool Read() override {
+    bool ReadEntity(SXMLEntity &entity, bool skipcdata = false) override {
         if (CurrentIndex < Data.size()) {
-            CurrentIndex++;
+            entity = Data[CurrentIndex++];
             return true;
         }
         return false;
-    }
-
-    // Fix: Ensure Name() properly overrides the base class method
-    std::string Name() const override {
-        if (CurrentIndex == 0 || CurrentIndex > Data.size()) {
-            return "";
-        }
-        return Data[CurrentIndex - 1];
     }
 };
 
@@ -44,7 +42,12 @@ protected:
 
 TEST_F(OpenStreetMapTest, TestNodeCount) {
     auto xmlReader = std::make_shared<MockXMLReader>();
-    xmlReader->Data = { "node", "node", "node" };
+    
+    xmlReader->Data = {
+        { MockXMLReader::SXMLEntity::EType::StartElement, "node", {{"id", "1"}} },
+        { MockXMLReader::SXMLEntity::EType::StartElement, "node", {{"id", "2"}} },
+        { MockXMLReader::SXMLEntity::EType::StartElement, "node", {{"id", "3"}} }
+    };
 
     COpenStreetMap osmMap(xmlReader);
     EXPECT_EQ(osmMap.NodeCount(), 3);
@@ -52,7 +55,11 @@ TEST_F(OpenStreetMapTest, TestNodeCount) {
 
 TEST_F(OpenStreetMapTest, TestWayCount) {
     auto xmlReader = std::make_shared<MockXMLReader>();
-    xmlReader->Data = { "way", "way" };
+
+    xmlReader->Data = {
+        { MockXMLReader::SXMLEntity::EType::StartElement, "way", {{"id", "10"}} },
+        { MockXMLReader::SXMLEntity::EType::StartElement, "way", {{"id", "11"}} }
+    };
 
     COpenStreetMap osmMap(xmlReader);
     EXPECT_EQ(osmMap.WayCount(), 2);
