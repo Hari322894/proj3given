@@ -114,14 +114,19 @@ std::shared_ptr<CBusSystem::SRoute> CCSVBusSystem::RouteByName(const std::string
 void CCSVBusSystem::PrintDebugInfo() const {
     std::cout << "StopCount: " << StopCount() << std::endl;
     std::cout << "RouteCount: " << RouteCount() << std::endl;
+    
+    size_t index = 0;
     for (const auto& [id, stop] : DImplementation->Stops) {
-        std::cout << "Stop ID: " << id << ", Node ID: " << stop->NodeID() << std::endl;
+        std::cout << "Index " << index << " IsSavedNode: 1 StopID: " << stop->ID() << " NodeID: " << stop->NodeID() << std::endl;
+        index++;
     }
+    
+    index = 0;
     for (const auto& [name, route] : DImplementation->Routes) {
-        std::cout << "Route: " << name << ", Stops: ";
-        for (const auto& stopID : route->RouteStops) {
-            std::cout << stopID << " ";
+        std::cout << "Route Index " << index << " Name: " << route->Name() << std::endl;
+        for (size_t i = 0; i < route->StopCount(); ++i) {
+            std::cout << "Stop " << i << ": " << route->GetStopID(i) << std::endl;
         }
-        std::cout << std::endl;
+        index++;
     }
 }
