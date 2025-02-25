@@ -86,7 +86,8 @@ CCSVBusSystem::CCSVBusSystem(std::shared_ptr<CDSVReader> stopsrc, std::shared_pt
                     //store in list for indexed access 
                     DImplementation->StopsByIndex.push_back(stop);  
                 } catch (const std::exception&) {
-                    //handle error by not writing anyhting here
+                    //handle error by 
+                    std::cerr << "Error processing stop entry: " << e.what() << "\n";
                 }
             }
         }
@@ -114,7 +115,8 @@ CCSVBusSystem::CCSVBusSystem(std::shared_ptr<CDSVReader> stopsrc, std::shared_pt
                     // Append stop to route by push_back
                     route->RouteStops.push_back(stopID);  
                 } catch (const std::exception&) {
-                    //handle error by not writing anything here
+                    //handle error by 
+                    std::cerr << "Error processing stop entry: " << e.what() << "\n";
                 }
             }
         }
@@ -177,22 +179,22 @@ std::shared_ptr<CBusSystem::SRoute> CCSVBusSystem::RouteByName(const std::string
 
 //overloads operator<< in order to print the bus system details
 std::ostream &operator<<(std::ostream &os, const CCSVBusSystem &bussystem) {
-    os << "StopCount: " + std::to_string(bussystem.StopCount()) + "\n";
-    os << "RouteCount: " + std::to_string(bussystem.RouteCount()) + "\n";
+    os << "StopCount: " << std::to_string(bussystem.StopCount()) << "\n";
+    os << "RouteCount: " << std::to_string(bussystem.RouteCount()) << "\n";
     
     for (size_t i = 0; i < bussystem.StopCount(); i++) {
         auto stop = bussystem.StopByIndex(i);
         if (stop) {
-            os << "Index " + std::to_string(i) + " ID: " + std::to_string(stop->ID()) +
-                  " NodeID: " + std::to_string(stop->NodeID()) + " ISSA: No\n";
+            os << "Index " << std::to_string(i) << " ID: " << std::to_string(stop->ID()) <<
+                  " NodeID: " << std::to_string(stop->NodeID()) << "\n";
         }
     }
     
     for (size_t i = 0; i < bussystem.RouteCount(); i++) {
         auto route = bussystem.RouteByIndex(i);
         if (route) {
-            os << "Route Index " + std::to_string(i) + " Name: " + route->Name() +
-                  " StopCount: " + std::to_string(route->StopCount()) + "\n";
+            os << "Route Index " << std::to_string(i) << " Name: " << route->Name() +
+                  " StopCount: " << std::to_string(route->StopCount()) << "\n";
         }
     }
     
