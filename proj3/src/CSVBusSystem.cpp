@@ -4,7 +4,6 @@
 #include <vector>
 #include <string>
 #include <unordered_map>
-#include <iostream>
 
 class CCSVBusSystem::SStop : public CBusSystem::SStop {
 public:
@@ -108,25 +107,4 @@ std::shared_ptr<CBusSystem::SRoute> CCSVBusSystem::RouteByIndex(std::size_t inde
 std::shared_ptr<CBusSystem::SRoute> CCSVBusSystem::RouteByName(const std::string &name) const noexcept {
     auto it = DImplementation->Routes.find(name);
     return (it != DImplementation->Routes.end()) ? it->second : nullptr;
-}
-
-// Print function for debugging
-void CCSVBusSystem::PrintDebugInfo() const {
-    std::cout << "StopCount: " << StopCount() << std::endl;
-    std::cout << "RouteCount: " << RouteCount() << std::endl;
-    
-    size_t index = 0;
-    for (const auto& [id, stop] : DImplementation->Stops) {
-        std::cout << "Index " << index << " IsSavedNode: 1 StopID: " << stop->ID() << " NodeID: " << stop->NodeID() << std::endl;
-        index++;
-    }
-    
-    index = 0;
-    for (const auto& [name, route] : DImplementation->Routes) {
-        std::cout << "Route Index " << index << " Name: " << route->Name() << std::endl;
-        for (size_t i = 0; i < route->StopCount(); ++i) {
-            std::cout << "Stop " << i << ": " << route->GetStopID(i) << std::endl;
-        }
-        index++;
-    }
 }
