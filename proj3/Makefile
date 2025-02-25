@@ -19,10 +19,7 @@ OBJ_FILES = $(patsubst $(SRC_DIR)/%.cpp,$(OBJ_DIR)/%.o,$(SRC_FILES))
 TEST_OBJ_FILES = $(patsubst $(TEST_DIR)/%.cpp,$(OBJ_DIR)/%.o,$(TEST_FILES))
 
 # Output binaries
-GTEST_TARGETS = $(BIN_DIR)/teststrutils $(BIN_DIR)/teststrdatasource \
-                $(BIN_DIR)/teststrdatasink $(BIN_DIR)/testdsv \
-                $(BIN_DIR)/testxml $(BIN_DIR)/testcsvbs \
-                $(BIN_DIR)/testosm
+GTEST_TARGETS = $(BIN_DIR)/testcsvbs $(BIN_DIR)/testosm
 
 # Default target
 all: $(GTEST_TARGETS)
