@@ -34,7 +34,10 @@ public:
     }
 
     TStopID GetStopID(std::size_t index) const noexcept override {
-        return (index < RouteStops.size()) ? RouteStops[index] : CBusSystem::InvalidStopID;
+        if (index >= RouteStops.size()) {
+            return CBusSystem::InvalidStopID;
+        }
+        return RouteStops[index];
     }
 };
 
@@ -51,46 +54,49 @@ CCSVBusSystem::CCSVBusSystem(std::shared_ptr<CDSVReader> stopsrc, std::shared_pt
     std::vector<std::string> row;
     if (stopsrc) {
         while (stopsrc->ReadRow(row)) {
-            if (row.size() < 2) continue;
-            try {
-                auto stop = std::make_shared<SStop>();
-                stop->StopID = std::stoul(row[0]);
-                stop->NodeIDValue = std::stoul(row[1]);
-                
-                DImplementation->Stops[stop->StopID] = stop;
-                DImplementation->StopsByIndex.push_back(stop);
-            } catch (const std::exception&) {
-                continue;
+            if (row.size() >= 2) {
+                try {
+                    auto stop = std::make_shared<SStop>();
+                    stop->StopID = std::stoul(row[0]);
+                    stop->NodeIDValue = std::stoul(row[1]);
+
+                    DImplementation->Stops[stop->StopID] = stop;
+                    DImplementation->StopsByIndex.push_back(stop);
+                } catch (const std::exception&) {
+                    // Handle error (optional logging or fallback behavior)
+                }
             }
         }
     }
 
     if (routesrc) {
         std::unordered_map<std::string, std::shared_ptr<SRoute>> tempRoutes;
-        
+
         while (routesrc->ReadRow(row)) {
-            if (row.size() < 2) continue;
-            try {
-                std::string routeName = row[0];
-                TStopID stopID = std::stoul(row[1]);
-                
-                if (tempRoutes.find(routeName) == tempRoutes.end()) {
-                    auto route = std::make_shared<SRoute>();
-                    route->RouteName = routeName;
-                    tempRoutes[routeName] = route;
+            if (row.size() >= 2) {
+                try {
+                    std::string routeName = row[0];
+                    TStopID stopID = std::stoul(row[1]);
+
+                    auto& route = tempRoutes[routeName];
+                    if (!route) {
+                        route = std::make_shared<SRoute>();
+                        route->RouteName = routeName;
+                    }
+                    route->RouteStops.push_back(stopID);
+                } catch (const std::exception&) {
+                    // Handle error (optional logging or fallback behavior)
                 }
-                tempRoutes[routeName]->RouteStops.push_back(stopID);
-            } catch (const std::exception&) {
-                continue;
             }
         }
-        
+
         for (const auto& pair : tempRoutes) {
             DImplementation->Routes[pair.first] = pair.second;
             DImplementation->RoutesByIndex.push_back(pair.second);
         }
     }
 }
+
 
 CCSVBusSystem::~CCSVBusSystem() = default;
 
@@ -103,22 +109,35 @@ std::size_t CCSVBusSystem::RouteCount() const noexcept {
 }
 
 std::shared_ptr<CBusSystem::SStop> CCSVBusSystem::StopByIndex(std::size_t index) const noexcept {
-    return (index < DImplementation->StopsByIndex.size()) ? DImplementation->StopsByIndex[index] : nullptr;
+    if (index < DImplementation->StopsByIndex.size()) {
+        return DImplementation->StopsByIndex[index];
+    }
+    return nullptr;
 }
 
 std::shared_ptr<CBusSystem::SStop> CCSVBusSystem::StopByID(TStopID id) const noexcept {
     auto it = DImplementation->Stops.find(id);
-    return (it != DImplementation->Stops.end()) ? it->second : nullptr;
+    if (it != DImplementation->Stops.end()) {
+        return it->second;
+    }
+    return nullptr;
 }
 
 std::shared_ptr<CBusSystem::SRoute> CCSVBusSystem::RouteByIndex(std::size_t index) const noexcept {
-    return (index < DImplementation->RoutesByIndex.size()) ? DImplementation->RoutesByIndex[index] : nullptr;
+    if (index < DImplementation->RoutesByIndex.size()) {
+        return DImplementation->RoutesByIndex[index];
+    }
+    return nullptr;
 }
 
 std::shared_ptr<CBusSystem::SRoute> CCSVBusSystem::RouteByName(const std::string &name) const noexcept {
     auto it = DImplementation->Routes.find(name);
-    return (it != DImplementation->Routes.end()) ? it->second : nullptr;
+    if (it != DImplementation->Routes.end()) {
+        return it->second;
+    }
+    return nullptr;
 }
+
 
 std::ostream &operator<<(std::ostream &os, const CCSVBusSystem &bussystem) {
     os << "StopCount: " + std::to_string(bussystem.StopCount()) + "\n";
