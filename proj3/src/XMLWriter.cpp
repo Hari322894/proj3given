@@ -52,7 +52,8 @@ struct CXMLWriter::SImplementation {
                     }
                     break;
                 default:
-                    if (!DDataSink->Put(ch)){ return false;
+                    if (!DDataSink->Put(ch)){ 
+                        return false;
                     }
             }
         }
