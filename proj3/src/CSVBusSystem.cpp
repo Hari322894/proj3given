@@ -87,7 +87,7 @@ CCSVBusSystem::CCSVBusSystem(std::shared_ptr<CDSVReader> stopsrc, std::shared_pt
                     DImplementation->StopsByIndex.push_back(stop);  
                 } catch (const std::exception& e) {
                     //handle error by 
-                    std::cerr << "Error processing stop entry: " << e.what() << "\n";
+                    std::cerr << "stop entry: " << e.what() << "\n";
                 }
             }
         }
@@ -116,7 +116,7 @@ CCSVBusSystem::CCSVBusSystem(std::shared_ptr<CDSVReader> stopsrc, std::shared_pt
                     route->RouteStops.push_back(stopID);  
                 } catch (const std::exception& e) {
                     //handle error by 
-                    std::cerr << "Error processing stop entry: " << e.what() << "\n";
+                    std::cerr << "stop entry: " << e.what() << "\n";
                 }
             }
         }
