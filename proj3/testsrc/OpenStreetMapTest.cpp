@@ -10,8 +10,10 @@ public:
     std::vector<std::string> Data;
     size_t CurrentIndex;
 
-    MockXMLReader() : CurrentIndex(0) {}
+    // Fix: Call CXMLReader's constructor explicitly
+    MockXMLReader() : CXMLReader(nullptr), CurrentIndex(0) {}
 
+    // Fix: Ensure Read() method properly overrides the base class method
     bool Read() override {
         if (CurrentIndex < Data.size()) {
             CurrentIndex++;
@@ -20,7 +22,11 @@ public:
         return false;
     }
 
+    // Fix: Ensure Name() properly overrides the base class method
     std::string Name() const override {
+        if (CurrentIndex == 0 || CurrentIndex > Data.size()) {
+            return "";
+        }
         return Data[CurrentIndex - 1];
     }
 };
