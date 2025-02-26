@@ -178,6 +178,8 @@ COpenStreetMap::COpenStreetMap(std::shared_ptr<CXMLReader> src) {
                 }
             } else if (entity.DNameData == "nd" && currentWay) {
                 // Process node reference inside a way
+                //using std::stoull since converting string to unsigned long long
+                //when reading attribute
                 for (const auto& attr : entity.DAttributes) {
                     if (attr.first == "ref") {
                         currentWay->NodeIDs.push_back(std::stoull(attr.second));
@@ -232,35 +234,39 @@ std::size_t COpenStreetMap::WayCount() const noexcept {
 // retrieve node by index
 std::shared_ptr<CStreetMap::SNode> COpenStreetMap::NodeByIndex(std::size_t index) const noexcept {
     if (index < DImplementation->Nodes.size()) {
-        return std::static_pointer_cast<CStreetMap::SNode>(DImplementation->Nodes[index]);
+        
+        return DImplementation->Nodes[index];
     }
-    return nullptr;
+    return nullptr;//if index is out of bounds do this
 }
 
 // retrieve node by ID
 std::shared_ptr<CStreetMap::SNode> COpenStreetMap::NodeByID(TNodeID id) const noexcept {
     for (auto& node : DImplementation->Nodes) {
         if (node->ID() == id) {
-            return std::static_pointer_cast<CStreetMap::SNode>(node);
+          
+            return node;
         }
     }
-    return nullptr;
+    return nullptr;//if no node with matching ID do this
 }
 
 // retrieve way by index
 std::shared_ptr<CStreetMap::SWay> COpenStreetMap::WayByIndex(std::size_t index) const noexcept {
     if (index < DImplementation->Ways.size()) {
-        return std::static_pointer_cast<CStreetMap::SWay>(DImplementation->Ways[index]);
+        
+        return DImplementation->Ways[index];
     }
-    return nullptr;
+    return nullptr;//index is out of bounds
 }
 
 // retrieve way by ID
 std::shared_ptr<CStreetMap::SWay> COpenStreetMap::WayByID(TWayID id) const noexcept {
     for (auto& way : DImplementation->Ways) {
         if (way->ID() == id) {
-            return std::static_pointer_cast<CStreetMap::SWay>(way);
+            
+            return way;
         }
     }
-    return nullptr;
+    return nullptr;//if no way with matching ID do this
 }
