@@ -7,6 +7,7 @@ https://learn.microsoft.com/en-us/cpp/standard-library/overloading-the-output-op
 //needed to convert string to unsigned int or long long therefore I used these websites to help for my OpenStreetMap test cases
 https://stackoverflow.com/questions/21422753/convert-a-string-to-a-unsigned-long-long-in-c
 https://www.geeksforgeeks.org/stdstoul-stdstoull-c/
+//I also explained the use of std::stod in OpenStreetMap, I cam across it when learning about std::stoull
 
 
 

@@ -154,6 +154,9 @@ COpenStreetMap::COpenStreetMap(std::shared_ptr<CXMLReader> src) {
                     if (attr.first == "id") {
                         currentNode->NodeID = std::stoull(attr.second);
                     } else if (attr.first == "lat") {
+                //std::stod is a simpler way of returning a double while
+                //trying to also check for erros such as
+                // std::invalid_argument and std::out_of_range
                         currentNode->NodeLocation.first = std::stod(attr.second);
                     } else if (attr.first == "lon") {
                         currentNode->NodeLocation.second = std::stod(attr.second);
@@ -234,7 +237,6 @@ std::size_t COpenStreetMap::WayCount() const noexcept {
 // retrieve node by index
 std::shared_ptr<CStreetMap::SNode> COpenStreetMap::NodeByIndex(std::size_t index) const noexcept {
     if (index < DImplementation->Nodes.size()) {
-        
         return DImplementation->Nodes[index];
     }
     return nullptr;//if index is out of bounds do this
@@ -244,7 +246,6 @@ std::shared_ptr<CStreetMap::SNode> COpenStreetMap::NodeByIndex(std::size_t index
 std::shared_ptr<CStreetMap::SNode> COpenStreetMap::NodeByID(TNodeID id) const noexcept {
     for (auto& node : DImplementation->Nodes) {
         if (node->ID() == id) {
-          
             return node;
         }
     }
@@ -254,7 +255,6 @@ std::shared_ptr<CStreetMap::SNode> COpenStreetMap::NodeByID(TNodeID id) const no
 // retrieve way by index
 std::shared_ptr<CStreetMap::SWay> COpenStreetMap::WayByIndex(std::size_t index) const noexcept {
     if (index < DImplementation->Ways.size()) {
-        
         return DImplementation->Ways[index];
     }
     return nullptr;//index is out of bounds
@@ -264,7 +264,6 @@ std::shared_ptr<CStreetMap::SWay> COpenStreetMap::WayByIndex(std::size_t index) 
 std::shared_ptr<CStreetMap::SWay> COpenStreetMap::WayByID(TWayID id) const noexcept {
     for (auto& way : DImplementation->Ways) {
         if (way->ID() == id) {
-            
             return way;
         }
     }
